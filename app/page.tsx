@@ -5,7 +5,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-zinc-950 px-8">
       <div className="text-center max-w-2xl flex flex-col items-center gap-6">
         <Image
-          src="/ByrdCloudLI.png"
+          src="/ByrdCloudLI-clr.png"
           alt="Byrd Cloud Solutions LLC"
           width={480}
           height={160}
