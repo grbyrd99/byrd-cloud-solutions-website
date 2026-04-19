@@ -1,14 +1,10 @@
 const { app } = require("@azure/functions");
 const { EmailClient } = require("@azure/communication-email");
-const twilio = require("twilio");
 
 const CONNECTION_STRING = process.env.COMMUNICATION_SERVICES_CONNECTION_STRING;
 const FROM_EMAIL = "donotreply@byrdcloud.io";
 const TO_EMAIL = "gary@byrdcloud.io";
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const FROM_PHONE = process.env.TWILIO_PHONE_NUMBER;
-const TO_PHONE = "+13147061653";
+const NTFY_TOPIC = "byrdcloud-contact-r8000";
 
 app.http("contact", {
   methods: ["POST"],
@@ -48,15 +44,18 @@ app.http("contact", {
       await poller.pollUntilDone();
 
       try {
-        const smsClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
         const preview = message.length > 80 ? message.substring(0, 80) + "..." : message;
-        await smsClient.messages.create({
-          from: FROM_PHONE,
-          to: TO_PHONE,
-          body: `Byrd Cloud Solutions: New contact from ${name} (${email}): "${preview}"`,
+        await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+          method: "POST",
+          headers: {
+            "Title": `New contact from ${name}`,
+            "Priority": "default",
+            "Content-Type": "text/plain",
+          },
+          body: `From: ${email}\n\n${preview}`,
         });
-      } catch (smsError) {
-        context.log("SMS notification failed:", smsError.message);
+      } catch (ntfyError) {
+        context.log("Push notification failed:", ntfyError.message);
       }
 
       return {
