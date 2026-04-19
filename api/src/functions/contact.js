@@ -1,5 +1,12 @@
 const { app } = require("@azure/functions");
 const { EmailClient } = require("@azure/communication-email");
+const { SmsClient } = require("@azure/communication-sms");
+
+const CONNECTION_STRING = process.env.COMMUNICATION_SERVICES_CONNECTION_STRING;
+const FROM_EMAIL = "gary@byrdcloud.io";
+const TO_EMAIL = "gary@byrdcloud.io";
+const FROM_PHONE = "+18776277170";
+const TO_PHONE = "+13147061653";
 
 app.http("contact", {
   methods: ["POST"],
@@ -16,14 +23,10 @@ app.http("contact", {
         };
       }
 
-      const connectionString = process.env.COMMUNICATION_SERVICES_CONNECTION_STRING;
-      const emailClient = new EmailClient(connectionString);
-
+      const emailClient = new EmailClient(CONNECTION_STRING);
       const emailMessage = {
-        senderAddress: "gary@byrdcloud.io",
-        recipients: {
-          to: [{ address: "gary@byrdcloud.io" }],
-        },
+        senderAddress: FROM_EMAIL,
+        recipients: { to: [{ address: TO_EMAIL }] },
         content: {
           subject: `Contact Form: ${subject || "New message from " + name}`,
           plainText: `Name: ${name}\nEmail: ${email}\nSubject: ${subject || "N/A"}\n\n${message}`,
@@ -40,6 +43,20 @@ app.http("contact", {
 
       const poller = await emailClient.beginSend(emailMessage);
       await poller.pollUntilDone();
+
+      // SMS notification — active once carrier verification completes
+      try {
+        const smsClient = new SmsClient(CONNECTION_STRING);
+        const preview = message.length > 80 ? message.substring(0, 80) + "..." : message;
+        await smsClient.send({
+          from: FROM_PHONE,
+          to: [TO_PHONE],
+          message: `Byrd Cloud Solutions: New contact from ${name} (${email}): "${preview}" Reply STOP to opt out.`,
+        });
+      } catch (smsError) {
+        // Log SMS failure but don't fail the whole request
+        context.log("SMS notification failed (may still be pending verification):", smsError.message);
+      }
 
       return {
         status: 200,
