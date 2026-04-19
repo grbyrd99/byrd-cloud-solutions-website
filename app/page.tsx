@@ -1,4 +1,5 @@
 import Image from "next/image";
+import ContactForm from "./ContactForm";
 
 const services = [
   {
@@ -158,48 +159,7 @@ export default function Home() {
           <p className="text-gray-600 mb-10">
             Ready to move to the cloud or optimize what you already have? Let&apos;s talk.
           </p>
-          <form
-            className="flex flex-col gap-4 text-left"
-            action="mailto:info@byrdcloud.io"
-            method="get"
-            encType="text/plain"
-          >
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input
-                type="text"
-                name="name"
-                placeholder="Your Name"
-                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-[#4bbfbf]"
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Your Email"
-                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-[#4bbfbf]"
-                required
-              />
-            </div>
-            <input
-              type="text"
-              name="subject"
-              placeholder="Subject"
-              className="border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-[#4bbfbf]"
-            />
-            <textarea
-              name="body"
-              placeholder="Tell us about your project..."
-              rows={5}
-              className="border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-[#4bbfbf] resize-none"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-[#1b3a6b] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#4bbfbf] transition-colors"
-            >
-              Send Message
-            </button>
-          </form>
+          <ContactForm />
         </div>
       </section>
 
