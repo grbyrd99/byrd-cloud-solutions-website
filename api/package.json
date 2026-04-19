@@ -5,6 +5,6 @@
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "@azure/communication-email": "^1.0.0",
-    "@azure/communication-sms": "^1.0.0"
+    "twilio": "^5.0.0"
   }
 }

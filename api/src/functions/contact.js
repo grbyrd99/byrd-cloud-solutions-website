@@ -1,11 +1,13 @@
 const { app } = require("@azure/functions");
 const { EmailClient } = require("@azure/communication-email");
-const { SmsClient } = require("@azure/communication-sms");
+const twilio = require("twilio");
 
 const CONNECTION_STRING = process.env.COMMUNICATION_SERVICES_CONNECTION_STRING;
-const FROM_EMAIL = "gary@byrdcloud.io";
+const FROM_EMAIL = "donotreply@byrdcloud.io";
 const TO_EMAIL = "gary@byrdcloud.io";
-const FROM_PHONE = "+18776277170";
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const FROM_PHONE = process.env.TWILIO_PHONE_NUMBER;
 const TO_PHONE = "+13147061653";
 
 app.http("contact", {
@@ -26,6 +28,7 @@ app.http("contact", {
       const emailClient = new EmailClient(CONNECTION_STRING);
       const emailMessage = {
         senderAddress: FROM_EMAIL,
+        replyTo: [{ address: email, displayName: name }],
         recipients: { to: [{ address: TO_EMAIL }] },
         content: {
           subject: `Contact Form: ${subject || "New message from " + name}`,
@@ -44,18 +47,16 @@ app.http("contact", {
       const poller = await emailClient.beginSend(emailMessage);
       await poller.pollUntilDone();
 
-      // SMS notification — active once carrier verification completes
       try {
-        const smsClient = new SmsClient(CONNECTION_STRING);
+        const smsClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
         const preview = message.length > 80 ? message.substring(0, 80) + "..." : message;
-        await smsClient.send({
+        await smsClient.messages.create({
           from: FROM_PHONE,
-          to: [TO_PHONE],
-          message: `Byrd Cloud Solutions: New contact from ${name} (${email}): "${preview}" Reply STOP to opt out.`,
+          to: TO_PHONE,
+          body: `Byrd Cloud Solutions: New contact from ${name} (${email}): "${preview}"`,
         });
       } catch (smsError) {
-        // Log SMS failure but don't fail the whole request
-        context.log("SMS notification failed (may still be pending verification):", smsError.message);
+        context.log("SMS notification failed:", smsError.message);
       }
 
       return {
